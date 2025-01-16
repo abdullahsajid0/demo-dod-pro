@@ -14,6 +14,14 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 import time
 from typing import Optional, Dict, List
 import logging
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle, ListStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, ListFlowable, ListItem
+from reportlab.platypus.tables import Table, TableStyle
+import re
+
 
 
 # Configure custom theme and styling
@@ -275,6 +283,24 @@ def generate_styled_pdf(title: str, content: str, timestamp: str) -> BytesIO:
         spaceAfter=12,
         leading=14
     )
+     # Bullet list style
+    bullet_list_style = ListStyle('BulletListStyle')
+
+    # Code style
+    code_style = ParagraphStyle(
+        'CodeStyle',
+        parent=styles['BodyText'],
+        fontName='Courier',
+        fontSize=10,
+        textColor=colors.HexColor('#2C3E50'),
+        backColor=colors.HexColor('#F4F4F4'),
+        leading=12,
+        spaceBefore=6,
+        spaceAfter=6,
+        leftIndent=20
+    )
+
+    
 
     elements = []
 
@@ -284,7 +310,45 @@ def generate_styled_pdf(title: str, content: str, timestamp: str) -> BytesIO:
     elements.append(Spacer(1, 20))
 
     # Add content paragraphs
-    elements.append(Paragraph(content, content_style))
+    content_lines = content.splitlines()
+    bullet_items = []
+    code_lines = []
+    in_code_block = False  # Track code block state
+
+    for line in content_lines:
+        stripped_line = line.strip()
+
+        if stripped_line.startswith("```"):  # Handle code block start/end
+            in_code_block = not in_code_block
+            if not in_code_block and code_lines:  # Close and add the code block
+                code_block = "<br/>".join(code_lines)  # Preserve line breaks in code
+                elements.append(Paragraph(code_block, code_style))
+                code_lines = []  # Reset code lines for the next block
+            continue
+
+        if in_code_block:  # Collect lines for the code block
+            code_lines.append(stripped_line)
+            continue
+
+        if stripped_line.startswith("•"):  # Handle bullets
+            bullet_items.append(ListItem(Paragraph(stripped_line[1:].strip(), content_style)))
+        elif "**" in stripped_line:  # Handle bold text
+            bold_line = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", stripped_line)
+            elements.append(Paragraph(bold_line, content_style))
+        else:  # Regular paragraph
+            if bullet_items:  # Add bullet list if present
+                elements.append(ListFlowable(bullet_items, bulletType='bullet', style=bullet_list_style))
+                bullet_items = []
+            elements.append(Paragraph(stripped_line, content_style))
+
+    # Add any remaining bullet list
+    if bullet_items:
+        elements.append(ListFlowable(bullet_items, bulletType='bullet', style=bullet_list_style))
+
+    # Add remaining code block if the file ends with it
+    if code_lines:
+        code_block = "<br/>".join(code_lines)
+        elements.append(Paragraph(code_block, code_style))
 
     # Build the PDF
     doc.build(elements)
@@ -351,7 +415,7 @@ class DocumentProcessor:
             
             # Process each chunk individually
             responses = []
-            for chunk in content_chunks:
+            (for chunk in content_chunks:
                 prompt_content = {
                     "summarize": f"Summarize the following content concisely:\n\n{chunk}",
                     "ask_question": f"Answer based on the content provided:\n\nContent:\n{chunk}\n\nQuestion: {question}",
@@ -362,11 +426,23 @@ class DocumentProcessor:
                     messages=[{"role": "user", "content": prompt_content}],
                     model="llama-3.3-70b-versatile",
                 )
-                responses.append(chat_completion.choices[0].message.content)
+                responses.append(chat_completion.choices[0].message.content))
 
             # Combine all responses
             combined_response = "\n\n".join(responses)
-            return combined_response
+            (chat_completion = client.chat.completions.create(
+                messages=[
+                            {
+                                "role": "user",
+                                "content": "can you just refine this response make sure that no information is removed here is the content":combined_response,
+                             }
+                             ],
+                model="llama-3.1-8b-instant",
+                        )
+
+            combined_responses=(chat_completion.choices[0].message.content))
+            return combined_responses
+
 
         except Exception as e:
             self.logger.error(f"Error in API call: {str(e)}")
@@ -530,7 +606,9 @@ def main():
                 label="Download PDF",
                 data=pdf_buffer,
                 file_name="processed_document.pdf",
-                mime="application/pdf"
+                mime="application/pdf",
+                key="download_button",
+                help="Download the response in a professional PDF format"
             )
 
         st.markdown("</div>", unsafe_allow_html=True)
