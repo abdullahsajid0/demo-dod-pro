@@ -434,7 +434,7 @@ class DocumentProcessor:
                 messages=[
                             {
                                 "role": "user",
-                                "content": "can you just refine this response make sure that no information is removed here is the content":combined_response,
+                                "content": "can you just refine this response make sure that no information is removed here is the content"+combined_response,
                              }
                              ],
                 model="llama-3.1-8b-instant",
