@@ -346,7 +346,7 @@ class DocumentProcessor:
                 return "No content to process"
 
             # Split content into chunks of max 2000 characters each for model processing
-            chunk_size = 127000
+            chunk_size = 7000
             content_chunks = [content[i:i + chunk_size] for i in range(0, len(content), chunk_size)]
             
             # Process each chunk individually
