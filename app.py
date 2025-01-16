@@ -430,18 +430,18 @@ class DocumentProcessor:
 
             # Combine all responses
             combined_response = "\n\n".join(responses)
-            chat_completion = self.client.chat.completions.create(
-                messages=[
-                            {
-                                "role": "user",
-                                "content": "can you just refine this response make sure that no information is removed here is the content"+combined_response,
-                             }
-                             ],
-                model="llama-3.1-8b-instant",
-                        )
+            # chat_completion = self.client.chat.completions.create(
+            #     messages=[
+            #                 {
+            #                     "role": "user",
+            #                     "content": "can you just refine this response make sure that no information is removed here is the content"+combined_response,
+            #                  }
+            #                  ],
+            #     model="llama-3.1-8b-instant",
+            #             )
 
-            combined_responses=(chat_completion.choices[0].message.content)
-            return combined_responses
+            # combined_responses=(chat_completion.choices[0].message.content)
+            return combined_response
 
 
         except Exception as e:
