@@ -415,7 +415,7 @@ class DocumentProcessor:
             
             # Process each chunk individually
             responses = []
-            (for chunk in content_chunks:
+            for chunk in content_chunks:
                 prompt_content = {
                     "summarize": f"Summarize the following content concisely:\n\n{chunk}",
                     "ask_question": f"Answer based on the content provided:\n\nContent:\n{chunk}\n\nQuestion: {question}",
@@ -426,11 +426,11 @@ class DocumentProcessor:
                     messages=[{"role": "user", "content": prompt_content}],
                     model="llama-3.3-70b-versatile",
                 )
-                responses.append(chat_completion.choices[0].message.content))
+                responses.append(chat_completion.choices[0].message.content)
 
             # Combine all responses
             combined_response = "\n\n".join(responses)
-            (chat_completion = client.chat.completions.create(
+            chat_completion = client.chat.completions.create(
                 messages=[
                             {
                                 "role": "user",
@@ -440,7 +440,7 @@ class DocumentProcessor:
                 model="llama-3.1-8b-instant",
                         )
 
-            combined_responses=(chat_completion.choices[0].message.content))
+            combined_responses=(chat_completion.choices[0].message.content)
             return combined_responses
 
 
