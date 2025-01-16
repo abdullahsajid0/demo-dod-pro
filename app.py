@@ -430,7 +430,7 @@ class DocumentProcessor:
 
             # Combine all responses
             combined_response = "\n\n".join(responses)
-            chat_completion = client.chat.completions.create(
+            chat_completion = self.client.chat.completions.create(
                 messages=[
                             {
                                 "role": "user",
